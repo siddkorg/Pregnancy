@@ -7,7 +7,8 @@ import {
   BookOpen, 
   Gamepad2, 
   ClipboardList,
-  Sparkles
+  Settings,
+  Calendar
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -29,13 +30,19 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, setScreen }) =>
     <div className="min-h-screen flex flex-col max-w-md mx-auto bg-white shadow-xl relative overflow-hidden">
       {/* Header */}
       <header className="px-6 pt-8 pb-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-serif font-bold text-pink-600">Bump & Bloom</h1>
-          <p className="text-gray-400 text-sm">Nurturing your journey</p>
+        <div className="flex items-center gap-2">
+          <div className="text-3xl animate-bounce duration-[2000ms]">👶</div>
+          <div>
+            <h1 className="text-2xl font-serif font-bold text-pink-600">Bump & Bloom</h1>
+            <p className="text-gray-400 text-sm">Nurturing your journey</p>
+          </div>
         </div>
-        <div className="bg-pink-100 p-2 rounded-full">
-          <Sparkles className="text-pink-500 w-5 h-5" />
-        </div>
+        <button 
+          onClick={() => setScreen(AppScreen.SETTINGS)}
+          className={`p-2 rounded-full transition-all ${activeScreen === AppScreen.SETTINGS ? 'bg-pink-100 text-pink-600' : 'bg-gray-50 text-gray-400'}`}
+        >
+          <Settings size={20} />
+        </button>
       </header>
 
       {/* Main Content */}
@@ -53,8 +60,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, setScreen }) =>
               activeScreen === item.id ? 'text-pink-600 scale-110' : 'text-gray-400'
             }`}
           >
-            <item.icon size={24} strokeWidth={activeScreen === item.id ? 2.5 : 2} />
-            <span className="text-[10px] font-medium uppercase tracking-wider">{item.label}</span>
+            <item.icon size={22} strokeWidth={activeScreen === item.id ? 2.5 : 2} />
+            <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
           </button>
         ))}
       </nav>

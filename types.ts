@@ -25,5 +25,7 @@ export enum AppScreen {
   VISUALIZER = 'VISUALIZER',
   STORY = 'STORY',
   GAMES = 'GAMES',
-  LOG = 'LOG'
+  LOG = 'LOG',
+  CALENDAR = 'CALENDAR',
+  SETTINGS = 'SETTINGS'
 }
