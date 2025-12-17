@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 
 const getAI = () => new GoogleGenAI({ apiKey: (process.env as any).API_KEY || '' });
 
@@ -23,6 +23,26 @@ export const generateStory = async (week: number, mood: string): Promise<{ title
 
   const text = response.text || '{"title": "A Gentle Moment", "content": "The world slows down as you wait for your little one."}';
   return JSON.parse(text);
+};
+
+export const generateStoryAudio = async (text: string): Promise<string> => {
+  const ai = getAI();
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-preview-tts",
+    contents: [{ parts: [{ text: `Read this story in a very soothing, gentle, and maternal tone: ${text}` }] }],
+    config: {
+      responseModalities: [Modality.AUDIO],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName: 'Kore' },
+        },
+      },
+    },
+  });
+
+  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!base64Audio) throw new Error("Failed to generate audio");
+  return base64Audio;
 };
 
 export const generateBabyImage = async (week: number): Promise<string> => {
