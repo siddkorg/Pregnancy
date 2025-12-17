@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+const getAI = () => new GoogleGenAI({ apiKey: (process.env as any).API_KEY || '' });
 
 export const generateStory = async (week: number, mood: string): Promise<{ title: string; content: string }> => {
   const ai = getAI();
@@ -21,7 +21,8 @@ export const generateStory = async (week: number, mood: string): Promise<{ title
     }
   });
 
-  return JSON.parse(response.text);
+  const text = response.text || '{"title": "A Gentle Moment", "content": "The world slows down as you wait for your little one."}';
+  return JSON.parse(text);
 };
 
 export const generateBabyImage = async (week: number): Promise<string> => {
