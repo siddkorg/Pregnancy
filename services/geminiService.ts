@@ -33,8 +33,22 @@ const FALLBACK_IMAGES: Record<string, string[]> = {
 };
 
 /**
- * Fruit comparison data to help the AI understand the scale
+ * Helper to handle retries with exponential backoff for 429 errors
  */
+async function withRetry<T>(fn: () => Promise<T>, retries = 2, delay = 2000): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    const isRateLimit = error?.message?.includes('429') || error?.status === 429;
+    if (isRateLimit && retries > 0) {
+      console.warn(`Rate limit hit (429). Retrying in ${delay}ms... (${retries} attempts left)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+}
+
 const getFruitReference = (week: number) => {
   if (week <= 4) return "a tiny poppy seed";
   if (week <= 8) return "a sweet raspberry";
@@ -56,7 +70,7 @@ const getFallbackImage = (week: number) => {
 
 export const generateStory = async (week: number, mood: string): Promise<{ title: string; content: string }> => {
   const ai = getAI();
-  try {
+  return withRetry(async () => {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Write a short, heartwarming 1-minute story for a pregnant mother who is at week ${week} and feeling ${mood}. The story should be soothing and end with a positive affirmation.`,
@@ -75,48 +89,50 @@ export const generateStory = async (week: number, mood: string): Promise<{ title
 
     const text = response.text || '{"title": "A Gentle Moment", "content": "The world slows down as you wait for your little one."}';
     return JSON.parse(text);
-  } catch (e) {
-    return { title: "A Gentle Moment", content: "The world slows down as you wait for your little one. You are doing a wonderful job, mama." };
-  }
+  }).catch(() => ({ 
+    title: "A Gentle Moment", 
+    content: "The world slows down as you wait for your little one. You are doing a wonderful job, mama." 
+  }));
 };
 
 export const generateStoryAudio = async (text: string): Promise<string> => {
   const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-tts",
-    contents: [{ parts: [{ text: `Read this story in a very soothing, gentle, and maternal tone: ${text}` }] }],
-    config: {
-      responseModalities: [Modality.AUDIO],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName: 'Kore' },
+  return withRetry(async () => {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Read this story in a very soothing, gentle, and maternal tone: ${text}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Kore' },
+          },
         },
       },
-    },
-  });
+    });
 
-  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!base64Audio) throw new Error("Failed to generate audio");
-  return base64Audio;
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) throw new Error("Failed to generate audio");
+    return base64Audio;
+  });
 };
 
 export const generateBabyImage = async (week: number): Promise<string> => {
   const ai = getAI();
   const fruit = getFruitReference(week);
-  const randomStyle = ARTISTIC_STYLES[Math.floor(Math.random() * ARTISTIC_STYLES.length)];
-  const seed = Math.random().toString(36).substring(7);
   
-  // Create a more descriptive prompt based on the development stage
-  let stageDescription = "";
-  if (week <= 4) stageDescription = "a glowing spark of life, a cluster of cells nestled in a golden light";
-  else if (week <= 8) stageDescription = "a tiny embryo with the first signs of life, floating in a peaceful, translucent sanctuary";
-  else if (week <= 20) stageDescription = "a developing life with recognizable features, translucent skin, peacefully floating in a warm, glowing environment";
-  else stageDescription = "a fully formed baby peacefully sleeping, detailed features, soft atmosphere, curled in a safe sanctuary";
+  return withRetry(async () => {
+    const randomStyle = ARTISTIC_STYLES[Math.floor(Math.random() * ARTISTIC_STYLES.length)];
+    const seed = Math.random().toString(36).substring(7);
+    
+    let stageDescription = "";
+    if (week <= 4) stageDescription = "a glowing spark of life, a cluster of cells nestled in a golden light";
+    else if (week <= 8) stageDescription = "a tiny embryo with the first signs of life, floating in a peaceful, translucent sanctuary";
+    else if (week <= 20) stageDescription = "a developing life with recognizable features, translucent skin, peacefully floating in a warm, glowing environment";
+    else stageDescription = "a fully formed baby peacefully sleeping, detailed features, soft atmosphere, curled in a safe sanctuary";
 
-  // Using more artistic and less "clinical" language to avoid strict safety filters
-  const prompt = `A ${randomStyle} symbolic representation of a growing miracle at ${week} weeks. The scale is approximately the size of ${fruit}. ${stageDescription}. Warm, ethereal lighting, nurturing and peaceful atmosphere, high-resolution digital art. Unique Variation Token: ${seed}.`;
+    const prompt = `A ${randomStyle} symbolic representation of a growing miracle at ${week} weeks. The scale is approximately the size of ${fruit}. ${stageDescription}. Warm, ethereal lighting, nurturing and peaceful atmosphere, high-resolution digital art. Unique Variation Token: ${seed}.`;
 
-  try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -136,22 +152,20 @@ export const generateBabyImage = async (week: number): Promise<string> => {
         }
       }
     }
+    throw new Error("No image data in response");
+  }).catch((error) => {
+    console.error("AI Image generation failed after retries, returning fallback:", error);
     return getFallbackImage(week);
-  } catch (error) {
-    console.error("AI Image generation failed, returning random fallback:", error);
-    return getFallbackImage(week);
-  }
+  });
 };
 
 export const generateDailyTip = async (week: number): Promise<string> => {
   const ai = getAI();
-  try {
+  return withRetry(async () => {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Give a single, gentle pregnancy tip for week ${week}. Short and sweet.`,
     });
     return response.text || "Drink plenty of water today!";
-  } catch {
-    return "Nurture yourself today, mama.";
-  }
+  }).catch(() => "Nurture yourself today, mama.");
 };

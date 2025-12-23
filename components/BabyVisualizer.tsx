@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { generateBabyImage } from '../services/geminiService';
-import { Info, Sparkles, Wand2, Stars } from 'lucide-react';
+import { Info, Sparkles, Wand2, Stars, AlertCircle } from 'lucide-react';
 
 const fruitSize: Record<number, { name: string, emoji: string }> = {
   1: { name: 'Tiny Speck', emoji: '✨' },
@@ -30,20 +30,41 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownTimer = useRef<NodeJS.Timeout | null>(null);
+
   const fruit = getFruit(week);
 
+  const startCooldown = () => {
+    setCooldown(5);
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    cooldownTimer.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const loadVisual = async () => {
-    // Clear previous image state immediately
+    if (loading || cooldown > 0) return;
+
+    setError(null);
     setImageUrl(null);
     setLoading(true);
-    // Increment refresh key to force a fresh DOM state for the next image
     setRefreshKey(prev => prev + 1);
     
     try {
       const url = await generateBabyImage(week);
       setImageUrl(url);
-    } catch (err) {
+      startCooldown();
+    } catch (err: any) {
       console.error("Visualizer Error:", err);
+      setError("We're having trouble reaching the stars. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -51,6 +72,9 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
 
   useEffect(() => {
     loadVisual();
+    return () => {
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    };
   }, [week]);
 
   return (
@@ -75,8 +99,22 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
             </div>
             <div className="text-center px-6">
               <p className="text-sm font-bold tracking-tight">Re-imagining Week {week}...</p>
-              <p className="text-[10px] opacity-70">Creating a unique artistic vision just for you.</p>
+              <p className="text-[10px] opacity-70">Please wait while we weave a new vision. Miracles take a moment!</p>
             </div>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-4 text-pink-400 px-10 text-center">
+            <AlertCircle size={48} className="text-pink-300" />
+            <div>
+              <p className="text-sm font-bold text-pink-600">Dreaming interrupted</p>
+              <p className="text-xs opacity-70 mt-1">{error}</p>
+            </div>
+            <button 
+              onClick={loadVisual}
+              className="mt-2 bg-pink-100 text-pink-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-pink-200 transition-colors"
+            >
+              TRY AGAIN
+            </button>
           </div>
         ) : imageUrl ? (
           <div key={`${week}-${refreshKey}`} className="relative w-full h-full animate-in zoom-in-95 fade-in duration-700">
@@ -93,13 +131,20 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
           </div>
         )}
         
-        {!loading && (
+        {!loading && !error && (
           <button 
             onClick={loadVisual}
-            className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm p-3 rounded-2xl shadow-xl hover:bg-white transition-all active:scale-95 border border-pink-100 flex items-center gap-2 group/btn z-10"
+            disabled={cooldown > 0}
+            className={`absolute bottom-6 right-6 backdrop-blur-sm p-3 rounded-2xl shadow-xl transition-all active:scale-95 border flex items-center gap-2 z-10 ${
+              cooldown > 0 
+              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+              : 'bg-white/95 text-pink-600 border-pink-100 hover:bg-white'
+            }`}
           >
-            <Sparkles className="w-5 h-5 text-pink-500 group-hover/btn:rotate-12 transition-transform" />
-            <span className="text-xs font-bold text-pink-600">RE-IMAGINE</span>
+            <Sparkles className={`w-5 h-5 ${cooldown > 0 ? 'text-gray-300' : 'text-pink-500'}`} />
+            <span className="text-xs font-bold">
+              {cooldown > 0 ? `RESTING (${cooldown}s)` : 'RE-IMAGINE'}
+            </span>
           </button>
         )}
       </div>
@@ -131,7 +176,7 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
             <div className="h-px flex-1 bg-pink-100"></div>
           </div>
           <p className="text-[10px] text-gray-400 italic text-center px-4">
-            Note: These images are unique artistic AI interpretations of growth stages and are not for medical diagnostic use.
+            Note: These images are unique artistic AI interpretations of growth stages. If we hit high traffic limits, we'll use a beautiful memory of a similar stage.
           </p>
         </div>
       </div>
