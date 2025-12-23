@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { generateBabyImage } from '../services/geminiService';
-import { Info, Sparkles, Wand2 } from 'lucide-react';
+import { Info, Sparkles, Wand2, Stars } from 'lucide-react';
 
 const fruitSize: Record<number, { name: string, emoji: string }> = {
   1: { name: 'Tiny Speck', emoji: '✨' },
@@ -37,8 +37,7 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
       const url = await generateBabyImage(week);
       setImageUrl(url);
     } catch (err) {
-      // Logic handled in service fallback, but local catch for safety
-      console.error(err);
+      console.error("Visualizer Error:", err);
     } finally {
       setLoading(false);
     }
@@ -49,24 +48,39 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   }, [week]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-8">
-      <div className="text-center">
-        <h2 className="text-2xl font-serif font-bold text-gray-800">My Little One</h2>
-        <p className="text-pink-500 font-medium">Currently the size of a {fruit.name} {fruit.emoji}</p>
+    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+      <div className="text-center space-y-1">
+        <div className="inline-flex items-center gap-2 bg-pink-50 px-3 py-1 rounded-full text-pink-600 text-[10px] font-bold uppercase tracking-widest mb-1">
+          <Stars size={12} />
+          Week {week} Development
+        </div>
+        <h2 className="text-3xl font-serif font-bold text-gray-800">My Little One</h2>
+        <p className="text-pink-500 font-medium text-sm flex items-center justify-center gap-2">
+          Size of a <span className="font-bold underline underline-offset-4 decoration-pink-200">{fruit.name}</span> {fruit.emoji}
+        </p>
       </div>
 
-      <div className="relative aspect-square bg-gray-50 rounded-3xl overflow-hidden shadow-inner flex items-center justify-center border-2 border-pink-50 group">
+      <div className="relative aspect-square bg-gray-50 rounded-[2.5rem] overflow-hidden shadow-inner flex items-center justify-center border-4 border-pink-50/50 group">
         {loading ? (
           <div className="flex flex-col items-center gap-4 text-pink-400">
-            <div className="w-12 h-12 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
-            <p className="text-sm font-medium animate-pulse">Generating your miracle...</p>
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
+              <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 animate-pulse" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-bold tracking-tight">Visualizing Week {week}...</p>
+              <p className="text-[10px] opacity-70">Creating a unique medical illustration</p>
+            </div>
           </div>
         ) : imageUrl ? (
-          <img 
-            src={imageUrl} 
-            alt="Baby visualization" 
-            className="w-full h-full object-cover transition-opacity duration-1000 opacity-100" 
-          />
+          <div className="relative w-full h-full">
+            <img 
+              src={imageUrl} 
+              alt={`AI visualization of baby at week ${week}`} 
+              className="w-full h-full object-cover transition-all duration-700" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+          </div>
         ) : (
           <div className="text-pink-200">
             <Wand2 size={48} className="animate-pulse" />
@@ -76,30 +90,42 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
         {!loading && (
           <button 
             onClick={loadVisual}
-            className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-lg hover:bg-white transition-all active:scale-90 border border-pink-100 flex items-center gap-2"
-            title="Redraw with AI"
+            className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm p-3 rounded-2xl shadow-xl hover:bg-white transition-all active:scale-95 border border-pink-100 flex items-center gap-2 group/btn"
           >
-            <Sparkles className="w-5 h-5 text-pink-500" />
-            <span className="text-[10px] font-bold text-pink-600 pr-1">REIMAGINE</span>
+            <Sparkles className="w-5 h-5 text-pink-500 group-hover/btn:rotate-12 transition-transform" />
+            <span className="text-xs font-bold text-pink-600">RE-IMAGINE</span>
           </button>
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-pink-50 to-white p-6 rounded-2xl border border-pink-100/50 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <Info className="w-5 h-5 text-pink-600" />
-          <h3 className="font-bold text-pink-800">Growth Milestone</h3>
+      <div className="bg-white p-6 rounded-[2rem] border border-pink-100/50 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5">
+          <Info size={80} />
         </div>
-        <div className="space-y-3">
-          <p className="text-sm text-pink-700 leading-relaxed font-medium">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-pink-100 p-2 rounded-xl">
+            <Info className="w-5 h-5 text-pink-600" />
+          </div>
+          <h3 className="font-bold text-gray-800">What's Happening Now</h3>
+        </div>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 leading-relaxed font-medium">
             {week <= 4 ? 
-              "At this early stage, your baby is a tiny, magical spark finding its home. Every cell is programmed with your love." : 
-              `At ${week} weeks, your baby's journey is in full bloom. They are safely tucked away in their cozy sanctuary, growing stronger every day.`
+              "This week, your baby is a tiny ball of cells called a blastocyst. It's making its very first home in your womb, a miracle in the making." : 
+              week <= 12 ?
+              `By week ${week}, your baby's major organs are forming. Tiny fingers and toes are starting to peek out, and the heart is beating fast with life.` :
+              week <= 24 ?
+              `At week ${week}, your baby can now hear your heartbeat and even muffled sounds from the outside world. They are becoming more active every day!` :
+              `You're in the home stretch! At week ${week}, your baby is practicing breathing and opening their eyes, getting ready to meet you very soon.`
             }
           </p>
-          <div className="h-1 w-12 bg-pink-200 rounded-full"></div>
-          <p className="text-[11px] text-pink-400 italic">
-            Visualizations are artistic AI interpretations of fetal development stages.
+          <div className="flex items-center gap-2 py-2">
+            <div className="h-px flex-1 bg-pink-100"></div>
+            <Stars className="text-pink-200 w-4 h-4" />
+            <div className="h-px flex-1 bg-pink-100"></div>
+          </div>
+          <p className="text-[10px] text-gray-400 italic text-center">
+            These images are artistic AI interpretations of fetal growth stages and are not intended for medical diagnostic use.
           </p>
         </div>
       </div>

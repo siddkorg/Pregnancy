@@ -5,17 +5,30 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 /**
+ * Fruit comparison data to help the AI understand the scale
+ */
+const getFruitReference = (week: number) => {
+  if (week <= 4) return "a poppy seed";
+  if (week <= 8) return "a raspberry";
+  if (week <= 12) return "a lime";
+  if (week <= 16) return "an avocado";
+  if (week <= 20) return "a banana";
+  if (week <= 24) return "an ear of corn";
+  if (week <= 28) return "an eggplant";
+  if (week <= 32) return "a squash";
+  if (week <= 36) return "a papaya";
+  return "a watermelon";
+};
+
+/**
  * Fallback images for different stages of pregnancy if AI generation fails
  */
 const getFallbackImage = (week: number) => {
   if (week <= 12) {
-    // First Trimester: Tiny sprout/embryo stage
     return "https://images.unsplash.com/photo-1559599141-3816a0b361e2?auto=format&fit=crop&q=80&w=800";
   } else if (week <= 26) {
-    // Second Trimester: Developing features
     return "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=800";
   } else {
-    // Third Trimester: Full baby
     return "https://images.unsplash.com/photo-1520206159162-9f9302fd49ca?auto=format&fit=crop&q=80&w=800";
   }
 };
@@ -68,13 +81,22 @@ export const generateStoryAudio = async (text: string): Promise<string> => {
 
 export const generateBabyImage = async (week: number): Promise<string> => {
   const ai = getAI();
+  const fruit = getFruitReference(week);
+  
+  // Create a more descriptive prompt based on the development stage
+  let stageDescription = "";
+  if (week <= 4) stageDescription = "a tiny, magical cluster of cells, a golden spark of life beginning its journey";
+  else if (week <= 8) stageDescription = "a tiny embryo with beginning features, nestled in a glowing womb";
+  else if (week <= 20) stageDescription = "a developing fetus with recognizable features, translucent skin, peacefully floating";
+  else stageDescription = "a fully formed baby, peacefully sleeping, detailed features, soft hair, curled in the womb";
+
+  const prompt = `A hyper-realistic, beautiful 3D medical-style illustration of a baby in the womb at exactly ${week} weeks gestation. The baby is currently about the size of ${fruit}. ${stageDescription}. Soft, ethereal pink and gold studio lighting, cinematic atmosphere, peaceful and nurturing medical art.`;
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
-        parts: [
-          { text: `An artistic, ethereal 3D medical visualization of a developing baby in the womb at ${week} weeks gestation. Soft pastel lighting, dreamlike atmosphere, high definition, cinematic and peaceful medical art.` }
-        ]
+        parts: [{ text: prompt }]
       },
       config: {
         imageConfig: {
@@ -83,7 +105,6 @@ export const generateBabyImage = async (week: number): Promise<string> => {
       }
     });
 
-    // Instructions require iterating through all parts to find the image part
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) {
@@ -91,8 +112,6 @@ export const generateBabyImage = async (week: number): Promise<string> => {
         }
       }
     }
-    
-    // Fallback if no image part is in the response
     return getFallbackImage(week);
   } catch (error) {
     console.error("AI Image generation failed, using fallback:", error);
