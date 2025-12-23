@@ -29,12 +29,16 @@ const getFruit = (week: number) => {
 const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const fruit = getFruit(week);
 
   const loadVisual = async () => {
-    // Clear previous image to show the user a fresh generation is happening
+    // Clear previous image state immediately
     setImageUrl(null);
     setLoading(true);
+    // Increment refresh key to force a fresh DOM state for the next image
+    setRefreshKey(prev => prev + 1);
+    
     try {
       const url = await generateBabyImage(week);
       setImageUrl(url);
@@ -71,11 +75,11 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
             </div>
             <div className="text-center px-6">
               <p className="text-sm font-bold tracking-tight">Re-imagining Week {week}...</p>
-              <p className="text-[10px] opacity-70">Each miracle is unique. Weaving a new vision.</p>
+              <p className="text-[10px] opacity-70">Creating a unique artistic vision just for you.</p>
             </div>
           </div>
         ) : imageUrl ? (
-          <div className="relative w-full h-full animate-in zoom-in-95 duration-700">
+          <div key={`${week}-${refreshKey}`} className="relative w-full h-full animate-in zoom-in-95 fade-in duration-700">
             <img 
               src={imageUrl} 
               alt={`AI visualization of baby at week ${week}`} 
@@ -92,7 +96,7 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
         {!loading && (
           <button 
             onClick={loadVisual}
-            className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm p-3 rounded-2xl shadow-xl hover:bg-white transition-all active:scale-95 border border-pink-100 flex items-center gap-2 group/btn"
+            className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm p-3 rounded-2xl shadow-xl hover:bg-white transition-all active:scale-95 border border-pink-100 flex items-center gap-2 group/btn z-10"
           >
             <Sparkles className="w-5 h-5 text-pink-500 group-hover/btn:rotate-12 transition-transform" />
             <span className="text-xs font-bold text-pink-600">RE-IMAGINE</span>
@@ -108,17 +112,17 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
           <div className="bg-pink-100 p-2 rounded-xl">
             <Info className="w-5 h-5 text-pink-600" />
           </div>
-          <h3 className="font-bold text-gray-800">What's Happening Now</h3>
+          <h3 className="font-bold text-gray-800">Growth Milestone</h3>
         </div>
         <div className="space-y-4">
           <p className="text-sm text-gray-600 leading-relaxed font-medium">
             {week <= 4 ? 
-              "This week, your baby is a tiny ball of cells called a blastocyst. It's making its very first home in your womb, a miracle in the making." : 
+              "Your baby is a tiny miracle settling into its new home. Every single cell is part of an incredible plan." : 
               week <= 12 ?
-              `By week ${week}, your baby's major organs are forming. Tiny fingers and toes are starting to peek out, and the heart is beating fast with life.` :
+              `In week ${week}, major organs are starting to flourish. Tiny heartbeats are echoing the rhythm of life.` :
               week <= 24 ?
-              `At week ${week}, your baby can now hear your heartbeat and even muffled sounds from the outside world. They are becoming more active every day!` :
-              `You're in the home stretch! At week ${week}, your baby is practicing breathing and opening their eyes, getting ready to meet you very soon.`
+              `At week ${week}, your baby can sense your presence and hear the soft sounds of your world. A beautiful connection is growing.` :
+              `You're almost there! At week ${week}, your baby is practicing life skills like opening eyes and breathing, getting ready for your first hello.`
             }
           </p>
           <div className="flex items-center gap-2 py-2">
@@ -126,8 +130,8 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
             <Stars className="text-pink-200 w-4 h-4" />
             <div className="h-px flex-1 bg-pink-100"></div>
           </div>
-          <p className="text-[10px] text-gray-400 italic text-center">
-            Each visualization is a unique artistic interpretation of your baby's current stage. No two miracles are the same!
+          <p className="text-[10px] text-gray-400 italic text-center px-4">
+            Note: These images are unique artistic AI interpretations of growth stages and are not for medical diagnostic use.
           </p>
         </div>
       </div>
