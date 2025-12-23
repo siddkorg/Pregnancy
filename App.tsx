@@ -14,10 +14,10 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>(AppScreen.DASHBOARD);
   
   const [user, setUser] = useState<UserProfile>(() => {
-    // Static default due date: July 5th, 2025
+    // Static default due date: July 5th, 2026
     return {
       name: 'Sarah',
-      dueDate: '2025-07-05',
+      dueDate: '2026-07-05',
       currentWeek: 0, // Will be calculated by useMemo
     };
   });
@@ -45,6 +45,7 @@ const App: React.FC = () => {
     const weeksRemaining = diffDays / 7;
     const week = 40 - Math.floor(weeksRemaining);
     
+    // Ensure we stay within a reasonable range (1 to 42 weeks)
     return Math.max(1, Math.min(42, week));
   }, [user.dueDate]);
 
