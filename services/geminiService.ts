@@ -4,6 +4,16 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 // Ensure AI client is created with the correct environment variable
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
+const ARTISTIC_STYLES = [
+  "ethereal 3D digital art",
+  "soft watercolor style",
+  "dreamy oil painting aesthetic",
+  "detailed anatomical 3D render",
+  "luminous pastel illustration",
+  "cinematic soft-focus photography style",
+  "magical realism digital painting"
+];
+
 /**
  * Fruit comparison data to help the AI understand the scale
  */
@@ -82,6 +92,8 @@ export const generateStoryAudio = async (text: string): Promise<string> => {
 export const generateBabyImage = async (week: number): Promise<string> => {
   const ai = getAI();
   const fruit = getFruitReference(week);
+  const randomStyle = ARTISTIC_STYLES[Math.floor(Math.random() * ARTISTIC_STYLES.length)];
+  const seed = Math.random().toString(36).substring(7);
   
   // Create a more descriptive prompt based on the development stage
   let stageDescription = "";
@@ -90,7 +102,7 @@ export const generateBabyImage = async (week: number): Promise<string> => {
   else if (week <= 20) stageDescription = "a developing fetus with recognizable features, translucent skin, peacefully floating";
   else stageDescription = "a fully formed baby, peacefully sleeping, detailed features, soft hair, curled in the womb";
 
-  const prompt = `A hyper-realistic, beautiful 3D medical-style illustration of a baby in the womb at exactly ${week} weeks gestation. The baby is currently about the size of ${fruit}. ${stageDescription}. Soft, ethereal pink and gold studio lighting, cinematic atmosphere, peaceful and nurturing medical art.`;
+  const prompt = `A ${randomStyle} of a baby in the womb at exactly ${week} weeks gestation. The baby is currently about the size of ${fruit}. ${stageDescription}. Soft, ethereal lighting, cinematic atmosphere, peaceful and nurturing medical-inspired art. Unique variant ID: ${seed}.`;
 
   try {
     const response = await ai.models.generateContent({

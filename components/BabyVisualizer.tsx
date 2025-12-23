@@ -32,6 +32,8 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   const fruit = getFruit(week);
 
   const loadVisual = async () => {
+    // Clear previous image to show the user a fresh generation is happening
+    setImageUrl(null);
     setLoading(true);
     try {
       const url = await generateBabyImage(week);
@@ -67,17 +69,17 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
               <div className="w-16 h-16 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
               <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 animate-pulse" />
             </div>
-            <div className="text-center">
-              <p className="text-sm font-bold tracking-tight">Visualizing Week {week}...</p>
-              <p className="text-[10px] opacity-70">Creating a unique medical illustration</p>
+            <div className="text-center px-6">
+              <p className="text-sm font-bold tracking-tight">Re-imagining Week {week}...</p>
+              <p className="text-[10px] opacity-70">Each miracle is unique. Weaving a new vision.</p>
             </div>
           </div>
         ) : imageUrl ? (
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-full animate-in zoom-in-95 duration-700">
             <img 
               src={imageUrl} 
               alt={`AI visualization of baby at week ${week}`} 
-              className="w-full h-full object-cover transition-all duration-700" 
+              className="w-full h-full object-cover" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
           </div>
@@ -125,7 +127,7 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
             <div className="h-px flex-1 bg-pink-100"></div>
           </div>
           <p className="text-[10px] text-gray-400 italic text-center">
-            These images are artistic AI interpretations of fetal growth stages and are not intended for medical diagnostic use.
+            Each visualization is a unique artistic interpretation of your baby's current stage. No two miracles are the same!
           </p>
         </div>
       </div>
