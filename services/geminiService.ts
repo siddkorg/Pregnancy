@@ -4,31 +4,64 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 // Ensure AI client is created with the correct environment variable
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
-const ARTISTIC_STYLES = [
-  "ethereal 3D digital art",
-  "soft watercolor style",
-  "dreamy oil painting aesthetic",
-  "detailed anatomical 3D render",
-  "luminous pastel illustration",
-  "cinematic soft-focus photography style",
-  "magical realism digital painting",
-  "golden hour nurturing glow",
-  "celestial spirit art",
-  "bioluminescent growth visualization"
-];
-
-const FALLBACK_IMAGES: Record<string, string[]> = {
-  early: [
+/**
+ * Curated static library of artistic baby/pregnancy representations.
+ * 6 images per stage to ensure variety when "Re-imagining".
+ */
+const STATIC_BABY_LIBRARY: Record<string, string[]> = {
+  // Stage 1: Weeks 1-4 (The Spark)
+  spark: [
     "https://images.unsplash.com/photo-1559599141-3816a0b361e2?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=800"
+    "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1502781253888-af2b069d8544?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1475116127127-e3ce09ee84e1?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?auto=format&fit=crop&q=80&w=800"
   ],
-  mid: [
+  // Stage 2: Weeks 5-12 (Tiny Growth)
+  tiny: [
     "https://images.unsplash.com/photo-1520206159162-9f9302fd49ca?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=800"
+    "https://images.unsplash.com/photo-1513273159381-c4a8ee0e814a?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1556139930-c23fa4a4f934?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1481841584373-d220f5c2f542?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=800"
   ],
-  late: [
+  // Stage 3: Weeks 13-20 (First Kicks)
+  blooming: [
     "https://images.unsplash.com/photo-1523350165414-082d792c9012?auto=format&fit=crop&q=80&w=800",
-    "https://images.unsplash.com/photo-1555252333-978fead023f4?auto=format&fit=crop&q=80&w=800"
+    "https://images.unsplash.com/photo-1532033028614-d5763d0dd1d4?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1544171255-235816bb9825?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=800"
+  ],
+  // Stage 4: Weeks 21-28 (Hearing Voices)
+  active: [
+    "https://images.unsplash.com/photo-1555252333-978fead023f4?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1544126592-807daa2b5652?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1504439468489-c8920d796a29?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1471341971476-ae15ff5dd4ea?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=800"
+  ],
+  // Stage 5: Weeks 29-36 (Dreaming)
+  dreaming: [
+    "https://images.unsplash.com/photo-1520206159162-9f9302fd49ca?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1510333302764-dc33c7885e30?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800"
+  ],
+  // Stage 6: Weeks 37-42 (Ready to Meet)
+  ready: [
+    "https://images.unsplash.com/photo-1555006203-9977828065f4?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1526631134603-879796696ee8?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1542442828-287217bfb842?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1537673156864-5d2de38e11e2?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?auto=format&fit=crop&q=80&w=800"
   ]
 };
 
@@ -60,12 +93,6 @@ const getFruitReference = (week: number) => {
   if (week <= 32) return "a striped squash";
   if (week <= 36) return "a tropical papaya";
   return "a round watermelon";
-};
-
-const getFallbackImage = (week: number) => {
-  const category = week <= 12 ? 'early' : week <= 26 ? 'mid' : 'late';
-  const options = FALLBACK_IMAGES[category];
-  return options[Math.floor(Math.random() * options.length)];
 };
 
 export const generateStory = async (week: number, mood: string): Promise<{ title: string; content: string }> => {
@@ -117,46 +144,28 @@ export const generateStoryAudio = async (text: string): Promise<string> => {
   });
 };
 
+/**
+ * Returns a static artistic image from our library based on the week.
+ * This replaces the AI image generation to prevent 429 errors.
+ */
 export const generateBabyImage = async (week: number): Promise<string> => {
-  const ai = getAI();
-  const fruit = getFruitReference(week);
+  // Determine the stage
+  let stageKey = 'ready';
+  if (week <= 4) stageKey = 'spark';
+  else if (week <= 12) stageKey = 'tiny';
+  else if (week <= 20) stageKey = 'blooming';
+  else if (week <= 28) stageKey = 'active';
+  else if (week <= 36) stageKey = 'dreaming';
+  else stageKey = 'ready';
+
+  const options = STATIC_BABY_LIBRARY[stageKey];
+  // Select a random image from the 6 available for this stage
+  const randomIndex = Math.floor(Math.random() * options.length);
   
-  return withRetry(async () => {
-    const randomStyle = ARTISTIC_STYLES[Math.floor(Math.random() * ARTISTIC_STYLES.length)];
-    const seed = Math.random().toString(36).substring(7);
-    
-    let stageDescription = "";
-    if (week <= 4) stageDescription = "a glowing spark of life, a cluster of cells nestled in a golden light";
-    else if (week <= 8) stageDescription = "a tiny embryo with the first signs of life, floating in a peaceful, translucent sanctuary";
-    else if (week <= 20) stageDescription = "a developing life with recognizable features, translucent skin, peacefully floating in a warm, glowing environment";
-    else stageDescription = "a fully formed baby peacefully sleeping, detailed features, soft atmosphere, curled in a safe sanctuary";
-
-    const prompt = `A ${randomStyle} symbolic representation of a growing miracle at ${week} weeks. The scale is approximately the size of ${fruit}. ${stageDescription}. Warm, ethereal lighting, nurturing and peaceful atmosphere, high-resolution digital art. Unique Variation Token: ${seed}.`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [{ text: prompt }]
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1"
-        }
-      }
-    });
-
-    if (response.candidates?.[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-        }
-      }
-    }
-    throw new Error("No image data in response");
-  }).catch((error) => {
-    console.error("AI Image generation failed after retries, returning fallback:", error);
-    return getFallbackImage(week);
-  });
+  // Artificial delay to simulate "imagining" and maintain UX feel
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  return options[randomIndex];
 };
 
 export const generateDailyTip = async (week: number): Promise<string> => {

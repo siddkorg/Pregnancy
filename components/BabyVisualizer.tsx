@@ -30,14 +30,13 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const cooldownTimer = useRef<NodeJS.Timeout | null>(null);
 
   const fruit = getFruit(week);
 
   const startCooldown = () => {
-    setCooldown(5);
+    setCooldown(2); // Reduced cooldown since we are using static images now
     if (cooldownTimer.current) clearInterval(cooldownTimer.current);
     cooldownTimer.current = setInterval(() => {
       setCooldown((prev) => {
@@ -53,7 +52,6 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   const loadVisual = async () => {
     if (loading || cooldown > 0) return;
 
-    setError(null);
     setImageUrl(null);
     setLoading(true);
     setRefreshKey(prev => prev + 1);
@@ -64,7 +62,6 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
       startCooldown();
     } catch (err: any) {
       console.error("Visualizer Error:", err);
-      setError("We're having trouble reaching the stars. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +79,7 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
       <div className="text-center space-y-1">
         <div className="inline-flex items-center gap-2 bg-pink-50 px-3 py-1 rounded-full text-pink-600 text-[10px] font-bold uppercase tracking-widest mb-1">
           <Stars size={12} />
-          Week {week} Development
+          Week {week} Vision
         </div>
         <h2 className="text-3xl font-serif font-bold text-gray-800">My Little One</h2>
         <p className="text-pink-500 font-medium text-sm flex items-center justify-center gap-2">
@@ -98,29 +95,15 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
               <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 animate-pulse" />
             </div>
             <div className="text-center px-6">
-              <p className="text-sm font-bold tracking-tight">Re-imagining Week {week}...</p>
-              <p className="text-[10px] opacity-70">Please wait while we weave a new vision. Miracles take a moment!</p>
+              <p className="text-sm font-bold tracking-tight">Focusing Week {week}...</p>
+              <p className="text-[10px] opacity-70">Gently weaving a beautiful vision of your baby.</p>
             </div>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center gap-4 text-pink-400 px-10 text-center">
-            <AlertCircle size={48} className="text-pink-300" />
-            <div>
-              <p className="text-sm font-bold text-pink-600">Dreaming interrupted</p>
-              <p className="text-xs opacity-70 mt-1">{error}</p>
-            </div>
-            <button 
-              onClick={loadVisual}
-              className="mt-2 bg-pink-100 text-pink-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-pink-200 transition-colors"
-            >
-              TRY AGAIN
-            </button>
           </div>
         ) : imageUrl ? (
           <div key={`${week}-${refreshKey}`} className="relative w-full h-full animate-in zoom-in-95 fade-in duration-700">
             <img 
               src={imageUrl} 
-              alt={`AI visualization of baby at week ${week}`} 
+              alt={`Artistic vision of baby at week ${week}`} 
               className="w-full h-full object-cover" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
@@ -131,19 +114,19 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
           </div>
         )}
         
-        {!loading && !error && (
+        {!loading && (
           <button 
             onClick={loadVisual}
             disabled={cooldown > 0}
             className={`absolute bottom-6 right-6 backdrop-blur-sm p-3 rounded-2xl shadow-xl transition-all active:scale-95 border flex items-center gap-2 z-10 ${
               cooldown > 0 
-              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+              ? 'bg-gray-100 text-gray-400 border-gray-200' 
               : 'bg-white/95 text-pink-600 border-pink-100 hover:bg-white'
             }`}
           >
             <Sparkles className={`w-5 h-5 ${cooldown > 0 ? 'text-gray-300' : 'text-pink-500'}`} />
-            <span className="text-xs font-bold">
-              {cooldown > 0 ? `RESTING (${cooldown}s)` : 'RE-IMAGINE'}
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {cooldown > 0 ? 'Loading...' : 'RE-IMAGINE'}
             </span>
           </button>
         )}
@@ -162,12 +145,12 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
         <div className="space-y-4">
           <p className="text-sm text-gray-600 leading-relaxed font-medium">
             {week <= 4 ? 
-              "Your baby is a tiny miracle settling into its new home. Every single cell is part of an incredible plan." : 
+              "Your baby is a tiny miracle settling into its new home. Every single cell is part of an incredible plan of life." : 
               week <= 12 ?
-              `In week ${week}, major organs are starting to flourish. Tiny heartbeats are echoing the rhythm of life.` :
+              `In week ${week}, major organs are starting to flourish. Tiny heartbeats are echoing the beautiful rhythm of existence.` :
               week <= 24 ?
-              `At week ${week}, your baby can sense your presence and hear the soft sounds of your world. A beautiful connection is growing.` :
-              `You're almost there! At week ${week}, your baby is practicing life skills like opening eyes and breathing, getting ready for your first hello.`
+              `At week ${week}, your baby can sense your warmth and hear the soft sounds of your world. A beautiful bond is blooming.` :
+              `You're almost there! At week ${week}, your baby is practicing life skills like blinking and dreaming, getting ready for your very first embrace.`
             }
           </p>
           <div className="flex items-center gap-2 py-2">
@@ -175,8 +158,8 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
             <Stars className="text-pink-200 w-4 h-4" />
             <div className="h-px flex-1 bg-pink-100"></div>
           </div>
-          <p className="text-[10px] text-gray-400 italic text-center px-4">
-            Note: These images are unique artistic AI interpretations of growth stages. If we hit high traffic limits, we'll use a beautiful memory of a similar stage.
+          <p className="text-[10px] text-gray-400 italic text-center px-4 leading-normal">
+            Note: These high-quality artistic representations are inspired by fetal growth stages and help visualize your journey. They are not medical diagnostic tools.
           </p>
         </div>
       </div>
