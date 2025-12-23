@@ -2,7 +2,6 @@
 import React, { useState, useMemo } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
-import BabyVisualizer from './components/BabyVisualizer';
 import StoryCorner from './components/StoryCorner';
 import MiniGames from './components/MiniGames';
 import ActivityLogView from './components/ActivityLogView';
@@ -68,8 +67,6 @@ const App: React.FC = () => {
     switch (currentScreen) {
       case AppScreen.DASHBOARD:
         return <Dashboard user={userWithCalculatedWeek} recentLogs={logs} onOpenCalendar={() => setCurrentScreen(AppScreen.CALENDAR)} />;
-      case AppScreen.VISUALIZER:
-        return <BabyVisualizer week={currentWeek} />;
       case AppScreen.STORY:
         return <StoryCorner week={currentWeek} />;
       case AppScreen.GAMES:

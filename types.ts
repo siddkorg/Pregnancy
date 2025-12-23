@@ -22,7 +22,6 @@ export interface Story {
 
 export enum AppScreen {
   DASHBOARD = 'DASHBOARD',
-  VISUALIZER = 'VISUALIZER',
   STORY = 'STORY',
   GAMES = 'GAMES',
   LOG = 'LOG',

@@ -3,12 +3,10 @@ import React from 'react';
 import { AppScreen } from '../types';
 import { 
   Home, 
-  Heart, 
   BookOpen, 
   Gamepad2, 
   ClipboardList,
-  Settings,
-  Calendar
+  Settings
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -20,7 +18,6 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeScreen, setScreen }) => {
   const navItems = [
     { id: AppScreen.DASHBOARD, icon: Home, label: 'Home' },
-    { id: AppScreen.VISUALIZER, icon: Heart, label: 'Baby' },
     { id: AppScreen.STORY, icon: BookOpen, label: 'Story' },
     { id: AppScreen.GAMES, icon: Gamepad2, label: 'Play' },
     { id: AppScreen.LOG, icon: ClipboardList, label: 'Log' },
