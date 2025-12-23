@@ -14,13 +14,11 @@ const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>(AppScreen.DASHBOARD);
   
   const [user, setUser] = useState<UserProfile>(() => {
-    // Default to ~24 weeks if no date set
-    const defaultDue = new Date();
-    defaultDue.setDate(defaultDue.getDate() + (16 * 7));
+    // Static default due date: July 5th, 2025
     return {
       name: 'Sarah',
-      dueDate: defaultDue.toISOString().split('T')[0],
-      currentWeek: 24,
+      dueDate: '2025-07-05',
+      currentWeek: 0, // Will be calculated by useMemo
     };
   });
 
@@ -41,8 +39,12 @@ const App: React.FC = () => {
     const due = new Date(user.dueDate);
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const weeksRemaining = Math.floor(diffDays / 7);
-    const week = 40 - weeksRemaining;
+    
+    // Total pregnancy is 280 days (40 weeks)
+    // Weeks remaining = diffDays / 7
+    const weeksRemaining = diffDays / 7;
+    const week = 40 - Math.floor(weeksRemaining);
+    
     return Math.max(1, Math.min(42, week));
   }, [user.dueDate]);
 
@@ -61,9 +63,10 @@ const App: React.FC = () => {
   };
 
   const renderScreen = () => {
+    const userWithCalculatedWeek = { ...user, currentWeek };
     switch (currentScreen) {
       case AppScreen.DASHBOARD:
-        return <Dashboard user={{...user, currentWeek}} recentLogs={logs} onOpenCalendar={() => setCurrentScreen(AppScreen.CALENDAR)} />;
+        return <Dashboard user={userWithCalculatedWeek} recentLogs={logs} onOpenCalendar={() => setCurrentScreen(AppScreen.CALENDAR)} />;
       case AppScreen.VISUALIZER:
         return <BabyVisualizer week={currentWeek} />;
       case AppScreen.STORY:
@@ -77,7 +80,7 @@ const App: React.FC = () => {
       case AppScreen.SETTINGS:
         return <ProfileSettings user={user} onSave={handleUpdateProfile} />;
       default:
-        return <Dashboard user={{...user, currentWeek}} recentLogs={logs} onOpenCalendar={() => setCurrentScreen(AppScreen.CALENDAR)} />;
+        return <Dashboard user={userWithCalculatedWeek} recentLogs={logs} onOpenCalendar={() => setCurrentScreen(AppScreen.CALENDAR)} />;
     }
   };
 

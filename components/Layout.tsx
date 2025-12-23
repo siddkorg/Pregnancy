@@ -31,10 +31,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeScreen, setScreen }) =>
       {/* Header */}
       <header className="px-6 pt-8 pb-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="text-3xl animate-bounce duration-[2000ms]">👶</div>
+          <div className="relative">
+            <div className="text-3xl animate-bounce duration-[3000ms]">👶</div>
+            <div className="absolute -top-1 -right-1 text-xs animate-pulse">✨</div>
+          </div>
           <div>
             <h1 className="text-2xl font-serif font-bold text-pink-600">Bump & Bloom</h1>
-            <p className="text-gray-400 text-sm">Nurturing your journey</p>
+            <p className="text-gray-400 text-sm">A happy journey 😊</p>
           </div>
         </div>
         <button 
