@@ -4,29 +4,45 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 // Ensure AI client is created with the correct environment variable
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
+/**
+ * Fallback images for different stages of pregnancy if AI generation fails
+ */
+const getFallbackImage = (week: number) => {
+  if (week <= 12) {
+    // First Trimester: Tiny sprout/embryo stage
+    return "https://images.unsplash.com/photo-1559599141-3816a0b361e2?auto=format&fit=crop&q=80&w=800";
+  } else if (week <= 26) {
+    // Second Trimester: Developing features
+    return "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=800";
+  } else {
+    // Third Trimester: Full baby
+    return "https://images.unsplash.com/photo-1520206159162-9f9302fd49ca?auto=format&fit=crop&q=80&w=800";
+  }
+};
+
 export const generateStory = async (week: number, mood: string): Promise<{ title: string; content: string }> => {
   const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: `Write a short, heartwarming 1-minute story for a pregnant mother who is at week ${week} and feeling ${mood}. The story should be soothing and end with a positive affirmation.`,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          title: { type: Type.STRING },
-          content: { type: Type.STRING }
-        },
-        required: ["title", "content"]
-      }
-    }
-  });
-
-  const text = response.text || '{"title": "A Gentle Moment", "content": "The world slows down as you wait for your little one."}';
   try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Write a short, heartwarming 1-minute story for a pregnant mother who is at week ${week} and feeling ${mood}. The story should be soothing and end with a positive affirmation.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            content: { type: Type.STRING }
+          },
+          required: ["title", "content"]
+        }
+      }
+    });
+
+    const text = response.text || '{"title": "A Gentle Moment", "content": "The world slows down as you wait for your little one."}';
     return JSON.parse(text);
   } catch (e) {
-    return { title: "A Gentle Moment", content: text };
+    return { title: "A Gentle Moment", content: "The world slows down as you wait for your little one. You are doing a wonderful job, mama." };
   }
 };
 
@@ -57,7 +73,7 @@ export const generateBabyImage = async (week: number): Promise<string> => {
       model: 'gemini-2.5-flash-image',
       contents: {
         parts: [
-          { text: `An artistic, soft-lit 3D medical illustration of a baby in the womb at ${week} weeks gestation. Soft pastel colors, ethereal atmosphere, highly detailed, peaceful.` }
+          { text: `An artistic, ethereal 3D medical visualization of a developing baby in the womb at ${week} weeks gestation. Soft pastel lighting, dreamlike atmosphere, high definition, cinematic and peaceful medical art.` }
         ]
       },
       config: {
@@ -76,11 +92,11 @@ export const generateBabyImage = async (week: number): Promise<string> => {
       }
     }
     
-    // Fallback to a relevant placeholder if no image part is found
-    return `https://images.unsplash.com/photo-1520206159162-9f9302fd49ca?auto=format&fit=crop&q=80&w=400&h=400`;
+    // Fallback if no image part is in the response
+    return getFallbackImage(week);
   } catch (error) {
-    console.error("Image generation failed:", error);
-    throw error;
+    console.error("AI Image generation failed, using fallback:", error);
+    return getFallbackImage(week);
   }
 };
 

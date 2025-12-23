@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { generateBabyImage } from '../services/geminiService';
-import { Info, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { Info, Sparkles, Wand2 } from 'lucide-react';
 
 const fruitSize: Record<number, { name: string, emoji: string }> = {
   1: { name: 'Tiny Speck', emoji: '✨' },
@@ -29,18 +29,16 @@ const getFruit = (week: number) => {
 const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const fruit = getFruit(week);
 
   const loadVisual = async () => {
     setLoading(true);
-    setError(null);
     try {
       const url = await generateBabyImage(week);
       setImageUrl(url);
     } catch (err) {
+      // Logic handled in service fallback, but local catch for safety
       console.error(err);
-      setError("We're having trouble visualizing right now. Please check your connection or try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -51,61 +49,59 @@ const BabyVisualizer: React.FC<{ week: number }> = ({ week }) => {
   }, [week]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-8">
       <div className="text-center">
         <h2 className="text-2xl font-serif font-bold text-gray-800">My Little One</h2>
         <p className="text-pink-500 font-medium">Currently the size of a {fruit.name} {fruit.emoji}</p>
       </div>
 
-      <div className="relative aspect-square bg-gray-50 rounded-3xl overflow-hidden shadow-inner flex items-center justify-center border-2 border-pink-50">
+      <div className="relative aspect-square bg-gray-50 rounded-3xl overflow-hidden shadow-inner flex items-center justify-center border-2 border-pink-50 group">
         {loading ? (
           <div className="flex flex-col items-center gap-4 text-pink-400">
             <div className="w-12 h-12 border-4 border-pink-100 border-t-pink-500 rounded-full animate-spin"></div>
-            <p className="text-sm font-medium animate-pulse">Drawing a dream...</p>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center gap-3 p-8 text-center">
-            <AlertCircle className="text-pink-300 w-10 h-10" />
-            <p className="text-xs text-gray-400 font-medium px-4">{error}</p>
-            <button 
-              onClick={loadVisual}
-              className="mt-2 flex items-center gap-2 bg-pink-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-pink-600 transition-colors"
-            >
-              <RefreshCw size={14} />
-              TRY AGAIN
-            </button>
+            <p className="text-sm font-medium animate-pulse">Generating your miracle...</p>
           </div>
         ) : imageUrl ? (
           <img 
             src={imageUrl} 
             alt="Baby visualization" 
             className="w-full h-full object-cover transition-opacity duration-1000 opacity-100" 
-            onLoad={(e) => (e.currentTarget.style.opacity = "1")}
           />
-        ) : null}
+        ) : (
+          <div className="text-pink-200">
+            <Wand2 size={48} className="animate-pulse" />
+          </div>
+        )}
         
-        {!loading && !error && (
+        {!loading && (
           <button 
             onClick={loadVisual}
-            className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2 rounded-full shadow-lg hover:bg-white transition-all active:scale-90"
-            title="Refresh Image"
+            className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-lg hover:bg-white transition-all active:scale-90 border border-pink-100 flex items-center gap-2"
+            title="Redraw with AI"
           >
             <Sparkles className="w-5 h-5 text-pink-500" />
+            <span className="text-[10px] font-bold text-pink-600 pr-1">REIMAGINE</span>
           </button>
         )}
       </div>
 
-      <div className="bg-pink-50 p-5 rounded-2xl border border-pink-100/50">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="bg-gradient-to-br from-pink-50 to-white p-6 rounded-2xl border border-pink-100/50 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
           <Info className="w-5 h-5 text-pink-600" />
           <h3 className="font-bold text-pink-800">Growth Milestone</h3>
         </div>
-        <p className="text-sm text-pink-700 leading-relaxed">
-          {week <= 4 ? 
-            "At this very early stage, your baby is a tiny cluster of cells finding their home. This is the start of a beautiful adventure." : 
-            `At ${week} weeks, your baby is developing rapidly. Their unique features are starting to form in this peaceful sanctuary. Keep sharing your love, mama.`
-          }
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-pink-700 leading-relaxed font-medium">
+            {week <= 4 ? 
+              "At this early stage, your baby is a tiny, magical spark finding its home. Every cell is programmed with your love." : 
+              `At ${week} weeks, your baby's journey is in full bloom. They are safely tucked away in their cozy sanctuary, growing stronger every day.`
+            }
+          </p>
+          <div className="h-1 w-12 bg-pink-200 rounded-full"></div>
+          <p className="text-[11px] text-pink-400 italic">
+            Visualizations are artistic AI interpretations of fetal development stages.
+          </p>
+        </div>
       </div>
     </div>
   );
